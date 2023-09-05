@@ -7,19 +7,23 @@ import (
 	"example/hello/configs"
 	"example/hello/model"
 	"fmt"
-	"io"
+
+	// "io"
 	"os"
 	"time"
 
 	"net/http"
 	"net/url"
 
+	"github.com/spf13/cast"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var tokenCollection *mongo.Collection = configs.GetCollection(configs.DB, "osuAuth")
+var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "user")
+
 var clientId string = os.Getenv("OSUCLIENT")
 var clientSecert string = os.Getenv("OSUSECERET")
 
@@ -81,16 +85,24 @@ func FetchAuthToken() (oAuth model.OAuth, err error) {
 
 }
 
-func FetchUserData(userId string) (resp map[string]any, err error) {
+func FetchUserData(userId string) (resp model.User, err error) {
+	userResponse := new(model.User)
 
-	token, _ := FetchAuthToken()
-	client := &http.Client{}
-	request, _ := http.NewRequest("GET", "https://osu.ppy.sh/api/v2/users/"+userId+"/osu", nil)
-	request.Header = http.Header{"Authorization": {token.TokenType + " " + token.AccessToken}, "Content-Type": {"application/json"}, "Accept": {"application/json"}}
-	response, _ := client.Do(request)
-	body, _ := io.ReadAll(response.Body)
+	err = userCollection.FindOne(context.TODO(), bson.M{"_id": userId}).Decode(&userResponse)
+	if err != nil && err == mongo.ErrNoDocuments {
+		token, _ := FetchAuthToken()
+		client := &http.Client{}
+		request, _ := http.NewRequest("GET", "https://osu.ppy.sh/api/v2/users/"+userId+"/osu", nil)
+		request.Header = http.Header{"Authorization": {token.TokenType + " " + token.AccessToken}, "Content-Type": {"application/json"}, "Accept": {"application/json"}}
+		response, _ := client.Do(request)
 
-	json.Unmarshal(body, &resp)
-	return resp, nil
+		json.NewDecoder(response.Body).Decode(&userResponse)
+		userResponse.ID = cast.ToString(userResponse.ID)
+		userCollection.InsertOne(context.TODO(), userResponse)
+
+	}
+	// body, _ := io.ReadAll(response.Body)
+	// json.Unmarshal(body, &resp)
+	return *userResponse, nil
 
 }
