@@ -1,34 +1,36 @@
 package configs
 
-import ("context"
-"fmt"
-"log"
-"time"
-"go.mongodb.org/mongo-driver/mongo"
-"go.mongodb.org/mongo-driver/mongo/options")
+import (
+	"context"
+	"fmt"
+	"log"
+	"time"
 
-func ConnectDB() *mongo.Client  {
-    client, err := mongo.Connect(context.TODO(),options.Client().ApplyURI(EnvMongoURI()))
-    if err != nil {
-        log.Fatal(err)
-    }
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
 
-    ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+func ConnectDB() *mongo.Client {
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(EnvMongoURI()))
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    //ping the database
-    err = client.Ping(ctx, nil)
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println("Connected to MongoDB")
-    return client
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	//ping the database
+	err = client.Ping(ctx, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Connected to MongoDB")
+	return client
 }
 
-//Client instance
+// Client instance
 var DB *mongo.Client = ConnectDB()
 
-//getting database collections
-func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-    collection := client.Database("development").Collection(collectionName)
-    return collection
+// getting database collections
+func GetCollection(collectionName string) *mongo.Collection {
+	return DB.Database("development").Collection(collectionName)
 }

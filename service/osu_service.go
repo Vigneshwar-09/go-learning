@@ -21,8 +21,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var tokenCollection *mongo.Collection = configs.GetCollection(configs.DB, "osuAuth")
-var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "user")
+var tokenCollection *mongo.Collection = configs.GetCollection("osuAuth")
+var userCollection *mongo.Collection = configs.GetCollection("user")
 
 var clientId string = os.Getenv("OSUCLIENT")
 var clientSecert string = os.Getenv("OSUSECERET")
