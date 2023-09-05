@@ -40,4 +40,3 @@ func FetchAuthToken() model.OAuth {
 
 }
 
-func 
