@@ -6,20 +6,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func ToDoRoute(fiberClient *fiber.App){
+func ToDoRoute(fiberClient *fiber.App) {
 
 	route := fiberClient.Group("/task")
 
-	route.Get("/get",controller.GetAllTask)
-	route.Post("/create",controller.CreateTask)
-	route.Put("/update/:id",controller.UpdateTask)
-	
+	route.Get("/get", controller.GetAllTask)
+	route.Post("/create", controller.CreateTask)
+	route.Put("/update/:id", controller.UpdateTask)
+
 }
 
-func OsuRoute(fiberClient *fiber.App){
+func OsuRoute(fiberClient *fiber.App) {
 
 	route := fiberClient.Group("/osu")
 
-	route.Post("/token",controller.GetNewToken)
-	
+	route.Post("/token", controller.GetNewToken)
+	route.Get("/user/:userString", controller.GetUserDetail)
+	route.Delete("/token", controller.DeleteExpiredToken)
 }

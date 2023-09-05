@@ -7,6 +7,7 @@ import (
 	"example/hello/configs"
 	"example/hello/model"
 	"fmt"
+	"io"
 	"os"
 	"time"
 
@@ -44,11 +45,10 @@ func GenerateToken() (model.OAuth, error) {
 	tokenCollection.InsertOne(context.TODO(), finalData)
 
 	return *finalData, nil
-
 }
 
 func RemoveExpiredToken() error {
-	cur, err := tokenCollection.DeleteMany(context.TODO(), bson.M{"createdAt": bson.M{
+	cur, err := tokenCollection.DeleteMany(context.TODO(), bson.M{"expiresIn": bson.M{
 		"$lt": primitive.NewDateTimeFromTime(time.Now()),
 	}})
 	if err != nil {
@@ -77,7 +77,20 @@ func FetchAuthToken() (oAuth model.OAuth, err error) {
 	if len(tokenList) > 0 {
 		return tokenList[0], nil
 	}
-	
 	return GenerateToken()
+
+}
+
+func FetchUserData(userId string) (resp map[string]any, err error) {
+
+	token, _ := FetchAuthToken()
+	client := &http.Client{}
+	request, _ := http.NewRequest("GET", "https://osu.ppy.sh/api/v2/users/"+userId+"/osu", nil)
+	request.Header = http.Header{"Authorization": {token.TokenType + " " + token.AccessToken}, "Content-Type": {"application/json"}, "Accept": {"application/json"}}
+	response, _ := client.Do(request)
+	body, _ := io.ReadAll(response.Body)
+
+	json.Unmarshal(body, &resp)
+	return resp, nil
 
 }
