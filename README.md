@@ -1,4 +1,4 @@
-# goLang-Learning
+# goLearning
 It's a repo to track my progress on go lang
 
 Goal is to learn crud operation and rest api for go 
