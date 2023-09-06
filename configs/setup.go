@@ -16,14 +16,14 @@ func ConnectDB() *mongo.Client {
 		log.Fatal(err)
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	//ping the database
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		log.Fatal(err)
+        log.Fatal(err)
 	}
 	fmt.Println("Connected to MongoDB")
+    defer cancel()
 	return client
 }
 
