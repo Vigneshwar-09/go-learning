@@ -30,3 +30,12 @@ func DeleteExpiredToken(c *fiber.Ctx) error {
 	}
 	return c.Status(200).JSON(fiber.Map{"status": "sucess"})
 }
+
+func DeadUserDataVisizulator(c *fiber.Ctx)error{
+	err := service.LineChartForUser(c.Params("userString"))
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err, "description": "Shit broke"})
+	}
+	return c.Status(200).JSON(fiber.Map{"data": "Success bitch"})
+}

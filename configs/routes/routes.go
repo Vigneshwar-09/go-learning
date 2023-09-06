@@ -23,4 +23,5 @@ func OsuRoute(fiberClient *fiber.App) {
 	route.Post("/token", controller.GetNewToken)
 	route.Get("/user/:userString", controller.GetUserDetail)
 	route.Delete("/token", controller.DeleteExpiredToken)
+	route.Get("/playCount/:userString",controller.DeadUserDataVisizulator)
 }
