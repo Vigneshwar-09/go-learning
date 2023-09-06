@@ -7,6 +7,7 @@ import (
 	"example/hello/configs"
 	"example/hello/model"
 	"fmt"
+	"io"
 
 	// "io"
 	"os"
@@ -15,14 +16,19 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/components"
+	"github.com/go-echarts/go-echarts/v2/opts"
+	"github.com/go-echarts/go-echarts/v2/types"
 	"github.com/spf13/cast"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/exp/slices"
 )
 
-var tokenCollection *mongo.Collection = configs.GetCollection(configs.DB, "osuAuth")
-var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "user")
+var tokenCollection *mongo.Collection = configs.GetCollection("osuAuth")
+var userCollection *mongo.Collection = configs.GetCollection("user")
 
 var clientId string = os.Getenv("OSUCLIENT")
 var clientSecert string = os.Getenv("OSUSECERET")
@@ -106,3 +112,69 @@ func FetchUserData(userId string) (resp model.User, err error) {
 	return *userResponse, nil
 
 }
+
+func LineChartForUser(userString string) error {
+	user, _ := FetchUserData(userString)
+	line := charts.NewLine()
+	line.SetGlobalOptions(
+		charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeWesteros}),
+		// charts.WithXAxisOpts(opts.XAxis{
+		// 	// Show: false,
+		// 	Min: user.RankHistory.Data[0],
+		// }),
+		charts.WithYAxisOpts(opts.YAxis{
+			// Show: false,
+			Min: user.RankHistory.Data[0],
+		}),
+		charts.WithTitleOpts(opts.Title{
+			Title:    user.Username,
+			Subtitle: user.RankHistory.Mode,
+			Link:     user.AvatarURL,
+		}))
+
+	fmt.Println(generateLineData(user.RankHistory.Data))
+
+	dateRange := make([]int64, 89)
+	for i := range dateRange {
+		dateRange[i] = 89 - int64(i)
+	}
+	slices.Reverse(user.RankHistory.Data)
+	fmt.Println("Date Range : ", dateRange)
+	line.SetXAxis(generateLineData(dateRange)).
+		AddSeries("Rank History", generateLineData(user.RankHistory.Data)).
+		// AddSeries("Category B", generateLineData(user.)).
+		SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: false, ShowSymbol: true}))
+
+	page := components.NewPage()
+	page.AddCharts(line)
+	f, err := os.Create("line.html")
+	if err != nil {
+		fmt.Println("Fuck me" + err.Error())
+	}
+	page.Render(io.MultiWriter(f))
+	return nil
+}
+
+func generateLineData(data []int64) []opts.LineData {
+	items := make([]opts.LineData, 0)
+	// data[0]=0
+	for i := 0; i < len(data); i++ {
+		items = append(items, opts.LineData{
+			Name:       cast.ToString(data[i]),
+			Value:      data[i],
+			Symbol:     "circle",
+			SymbolSize: 10,
+			// XAxisIndex: i,
+			// YAxisIndex: i,
+		})
+	}
+	return items
+}
+
+// func generateLineItems() []opts.LineData {
+// 	items := make([]opts.LineData, 0)
+// 	for i := 0; i < itemCntLine; i++ {
+// 		items = append(items, opts.LineData{Value: rand.Intn(300)})
+// 	}
+// 	return items
+// }

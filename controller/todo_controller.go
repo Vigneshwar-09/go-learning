@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var taskCollection *mongo.Collection = configs.GetCollection(configs.DB, "task")
+var taskCollection *mongo.Collection = configs.GetCollection("task")
 
 func GetAllTask(c *fiber.Ctx) error {
 	var taskList [](model.Todo)
