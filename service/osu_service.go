@@ -18,6 +18,7 @@ import (
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/components"
+
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/go-echarts/go-echarts/v2/types"
 	"github.com/spf13/cast"
@@ -113,18 +114,22 @@ func FetchUserData(userId string) (resp model.User, err error) {
 
 }
 
-func LineChartForUser(userString string) error {
+func LineChartForUser(userString string) (error) {
 	user, _ := FetchUserData(userString)
 	line := charts.NewLine()
 	line.SetGlobalOptions(
-		charts.WithInitializationOpts(opts.Initialization{Theme: types.ThemeWesteros}),
-		// charts.WithXAxisOpts(opts.XAxis{
-		// 	// Show: false,
-		// 	Min: user.RankHistory.Data[0],
-		// }),
+		charts.WithInitializationOpts(opts.Initialization{PageTitle: user.Username,Theme: types.ThemePurplePassion}),
+		charts.WithXAxisOpts(opts.XAxis{
+			SplitLine : &opts.SplitLine{Show: false,},
+			
+			// Show: false,
+			Min: 0,
+		}),
 		charts.WithYAxisOpts(opts.YAxis{
 			// Show: false,
+			SplitLine : &opts.SplitLine{Show: false,},
 			Min: user.RankHistory.Data[0],
+			
 		}),
 		charts.WithTitleOpts(opts.Title{
 			Title:    user.Username,
@@ -134,16 +139,16 @@ func LineChartForUser(userString string) error {
 
 	fmt.Println(generateLineData(user.RankHistory.Data))
 
-	dateRange := make([]int64, 89)
+	dateRange := make([]int64, 90)
 	for i := range dateRange {
-		dateRange[i] = 89 - int64(i)
+		dateRange[i] = 90 - int64(i)
 	}
 	slices.Reverse(user.RankHistory.Data)
 	fmt.Println("Date Range : ", dateRange)
 	line.SetXAxis(generateLineData(dateRange)).
 		AddSeries("Rank History", generateLineData(user.RankHistory.Data)).
 		// AddSeries("Category B", generateLineData(user.)).
-		SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: false, ShowSymbol: true}))
+		SetSeriesOptions(charts.WithLineChartOpts(opts.LineChart{Smooth: false, ShowSymbol: true,SymbolSize: 5,}))
 
 	page := components.NewPage()
 	page.AddCharts(line)
@@ -160,10 +165,10 @@ func generateLineData(data []int64) []opts.LineData {
 	// data[0]=0
 	for i := 0; i < len(data); i++ {
 		items = append(items, opts.LineData{
-			Name:       cast.ToString(data[i]),
+			Name:       "Day - " + cast.ToString(i),
 			Value:      data[i],
 			Symbol:     "circle",
-			SymbolSize: 10,
+			SymbolSize: 5,
 			// XAxisIndex: i,
 			// YAxisIndex: i,
 		})
